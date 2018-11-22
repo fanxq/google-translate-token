@@ -6,7 +6,7 @@
  */
 
 var got = require('got');
-var Configstore = require('configstore');
+//var Configstore = require('configstore');
 
 /* eslint-disable */
 // BEGIN
@@ -67,10 +67,11 @@ var wr = function(a) {
 // END
 /* eslint-enable */
 
-var config = new Configstore('google-translate-api');
+//var config = new Configstore('google-translate-api');
 
 var window = {
-    TKK: config.get('TKK') || '0'
+    //TKK: config.get('TKK') || '0'
+    TKK: localStorage.getItem('TKK') || '0'
 };
 
 function updateTKK() {
@@ -81,14 +82,15 @@ function updateTKK() {
             resolve();
         } else {
             got('https://translate.google.cn').then(function (res) {
-                var code = res.body.match(/TKK=(.*?)\(\)\)'\);/g);
-
+                //var code = res.body.match(/TKK=(.*?)\(\)\)'\);/g);
+                var code = res.body.match(/TKK=\'([^\']*)\';/g);
                 if (code) {
                     eval(code[0]);
                     /* eslint-disable no-undef */
                     if (typeof TKK !== 'undefined') {
                         window.TKK = TKK;
-                        config.set('TKK', TKK);
+                        //config.set('TKK', TKK);
+                        localStorage.setItem('TKK',TKK);
                     }
                     /* eslint-enable no-undef */
                 }
