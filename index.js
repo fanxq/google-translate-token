@@ -83,14 +83,14 @@ function updateTKK() {
         } else {
             got('https://translate.google.cn').then(function (res) {
                 //var code = res.body.match(/TKK=(.*?)\(\)\)'\);/g);
-                var code = res.body.match(/TKK=\'([^\']*)\';/g);
+                var code = /TKK:\'([^\']*)\',/ig.exec(res.body);
                 if (code) {
-                    eval(code[0]);
+                    eval('TKK="' + code[1] + '";');
                     /* eslint-disable no-undef */
                     if (typeof TKK !== 'undefined') {
                         window.TKK = TKK;
                         //config.set('TKK', TKK);
-                        localStorage.setItem('TKK',TKK);
+                        localStorage.setItem('TKK',code[1]);
                     }
                     /* eslint-enable no-undef */
                 }
