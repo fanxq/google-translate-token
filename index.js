@@ -22,9 +22,9 @@ function sM(a) {
         b[1] = c();
         b = (yr = window[b.join(c())] || "") || ""
     }
-    var d = wr(String.fromCharCode(116))
-        , c = wr(String.fromCharCode(107))
-        , d = [d(), d()];
+    var d = wr(String.fromCharCode(116)),
+        c = wr(String.fromCharCode(107)),
+        d = [d(), d()];
     d[1] = c();
     c = "&" + d.join("") + "=";
     d = b.split(".");
@@ -32,15 +32,15 @@ function sM(a) {
     for (var e = [], f = 0, g = 0; g < a.length; g++) {
         var l = a.charCodeAt(g);
         128 > l ? e[f++] = l : (2048 > l ? e[f++] = l >> 6 | 192 : (55296 == (l & 64512) && g + 1 < a.length && 56320 == (a.charCodeAt(g + 1) & 64512) ? (l = 65536 + ((l & 1023) << 10) + (a.charCodeAt(++g) & 1023),
-            e[f++] = l >> 18 | 240,
-            e[f++] = l >> 12 & 63 | 128) : e[f++] = l >> 12 | 224,
-            e[f++] = l >> 6 & 63 | 128),
+                    e[f++] = l >> 18 | 240,
+                    e[f++] = l >> 12 & 63 | 128) : e[f++] = l >> 12 | 224,
+                e[f++] = l >> 6 & 63 | 128),
             e[f++] = l & 63 | 128)
     }
     a = b;
     for (f = 0; f < e.length; f++)
         a += e[f],
-            a = xr(a, "+-a^+6");
+        a = xr(a, "+-a^+6");
     a = xr(a, "+-3^+b+-f");
     a ^= Number(d[1]) || 0;
     0 > a && (a = (a & 2147483647) + 2147483648);
@@ -49,32 +49,40 @@ function sM(a) {
 }
 
 var yr = null;
-var wr = function(a) {
-    return function() {
+var wr = function (a) {
+        return function () {
+            return a
+        }
+    },
+    xr = function (a, b) {
+        for (var c = 0; c < b.length - 2; c += 3) {
+            var d = b.charAt(c + 2),
+                d = "a" <= d ? d.charCodeAt(0) - 87 : Number(d),
+                d = "+" == b.charAt(c + 1) ? a >>> d : a << d;
+            a = "+" == b.charAt(c) ? a + d & 4294967295 : a ^ d
+        }
         return a
-    }
-}
-    , xr = function(a, b) {
-    for (var c = 0; c < b.length - 2; c += 3) {
-        var d = b.charAt(c + 2)
-            , d = "a" <= d ? d.charCodeAt(0) - 87 : Number(d)
-            , d = "+" == b.charAt(c + 1) ? a >>> d : a << d;
-        a = "+" == b.charAt(c) ? a + d & 4294967295 : a ^ d
-    }
-    return a
-};
+    };
 
 // END
 /* eslint-enable */
 
-//var config = new Configstore('google-translate-api');
+function getTKK() {
+    return new Promise(function (resolve, reject) {
+        chrome.storage.local.get({
+            'TKK': '0'
+        }, function (result) {
+            var TKK = '0';
+            if (result && result.TKK) {
+                TKK = result.TKK;
+            }
+            window.TKK = TKK;
+            resolve(TKK);
+        });
+    });
+}
 
-var window = {
-    //TKK: config.get('TKK') || '0'
-    TKK: localStorage.getItem('TKK') || '0'
-};
-
-function updateTKK() {
+function updateTKK(TKK) {
     return new Promise(function (resolve, reject) {
         var now = Math.floor(Date.now() / 3600000);
 
@@ -85,13 +93,11 @@ function updateTKK() {
                 //var code = res.body.match(/TKK=(.*?)\(\)\)'\);/g);
                 var code = /TKK:\'([^\']*)\',/ig.exec(res.body);
                 if (code) {
-                    eval('TKK="' + code[1] + '";');
-                    /* eslint-disable no-undef */
-                    if (typeof TKK !== 'undefined') {
-                        window.TKK = TKK;
-                        //config.set('TKK', TKK);
-                        localStorage.setItem('TKK',code[1]);
-                    }
+                    TKK = code[1];
+                    window.TKK = TKK;
+                    chrome.storage.local.set({
+                        'TKK': TKK
+                    });
                     /* eslint-enable no-undef */
                 }
 
@@ -112,12 +118,17 @@ function updateTKK() {
 }
 
 function get(text) {
-    return updateTKK().then(function () {
-        var tk = sM(text);
-        tk = tk.replace('&tk=', '');
-        return {name: 'tk', value: tk};
-    }).catch(function (err) {
-        throw err;
+    return getTKK().then(function (TKK) {
+        return updateTKK(TKK).then(function () {
+            var tk = sM(text);
+            tk = tk.replace('&tk=', '');
+            return {
+                name: 'tk',
+                value: tk
+            };
+        }).catch(function (err) {
+            throw err;
+        });
     });
 }
 
